@@ -118,10 +118,15 @@ jobs:
         run: |
           set -euo pipefail
           pnpm exec tauri signer generate -w "$RUNNER_TEMP/throwaway.key" -f --password ""
+          # rsign secret is one line with NO trailing newline. GITHUB_ENV multiline
+          # values end on a LINE equal to the delimiter — cat without an extra
+          # newline glued `__EOF__` onto the key → "Matching delimiter not found".
+          delim="EOF_TAURI_$(python3 -c 'import secrets; print(secrets.token_hex(8))')"
           {
-            echo "TAURI_SIGNING_PRIVATE_KEY<<__EOF__"
+            echo "TAURI_SIGNING_PRIVATE_KEY<<${delim}"
             cat "$RUNNER_TEMP/throwaway.key"
-            echo "__EOF__"
+            printf '\n'
+            echo "${delim}"
             echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
           } >> "$GITHUB_ENV"
       - name: Install trusted-signing-cli (Windows signing)
