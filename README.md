@@ -50,7 +50,7 @@ scoop install zus
 
 Or download `ZUS_x.y.z_x64-setup.exe` from the [latest release](https://github.com/8syncdev/zus-releases/releases/latest).
 
-> **SmartScreen note:** installers are not yet code-signed. Installing via **winget or scoop avoids the prompt**. For a manually downloaded `.exe`, verify it against `SHA256SUMS.txt` (below), then click **More info → Run anyway**.
+> **SmartScreen note:** installers are not yet code-signed. Installing via **winget or scoop avoids the prompt**. For a manually downloaded `.exe`, verify its minisign signature (see [Verify a download](#verify-a-download)), then click **More info → Run anyway**.
 
 #### macOS (Apple Silicon)
 
@@ -70,11 +70,33 @@ xattr -dr com.apple.quarantine /Applications/ZUS.app
 
 ### Verify a download
 
+The real trust anchor is the **minisign signature** (`.sig`) shipped next to every artifact,
+made with the ZUS updater key `1c2f579d3d50beda`. The app verifies these signatures
+**automatically** against the key compiled into it before installing or updating anything —
+a tampered artifact is rejected fail-closed. This is the signature you should rely on.
+
+`SHA256SUMS.txt` is a **convenience for spotting corrupted downloads only — not a trust anchor
+on its own**: anyone who can edit a release can rewrite both the artifacts and `SHA256SUMS.txt`
+in one go. From the next release onward it ships alongside `SHA256SUMS.txt.sig` (signed with the
+same updater key); when that file is present, verify it too.
+
 ```bash
+# Quick integrity check (detects corrupted downloads, NOT tampering):
 sha256sum -c --ignore-missing SHA256SUMS.txt
+# From the next release on, also verify the sums file is authentic:
+minisign -Vm SHA256SUMS.txt -x SHA256SUMS.txt.sig \
+  -P RWQcL1edPVC+2lpQSHFmsRXjz8wl4PI2PNpttRs7zZ7lqAvtNZU18tho
 ```
 
-`SHA256SUMS.txt` ships with every release. Update artifacts (`.sig`, `latest.json`) are signed with the ZUS updater key (minisign); the app verifies signatures automatically before installing anything.
+To verify an individual artifact by hand (e.g. `ZUS_x.y.z_amd64.AppImage` + its `.sig`), the
+updater signature is a base64-wrapped minisign signature (Tauri format), so decode one layer
+first, then verify with the pubkey above:
+
+```bash
+base64 -d ZUS_x.y.z_amd64.AppImage.sig > artifact.minisig
+minisign -Vm ZUS_x.y.z_amd64.AppImage -x artifact.minisig \
+  -P RWQcL1edPVC+2lpQSHFmsRXjz8wl4PI2PNpttRs7zZ7lqAvtNZU18tho
+```
 
 ### Auto-updates
 
@@ -108,7 +130,7 @@ scoop bucket add zus https://github.com/8syncdev/scoop-zus
 scoop install zus
 ```
 
-Hoặc tải `ZUS_x.y.z_x64-setup.exe` từ [bản mới nhất](https://github.com/8syncdev/zus-releases/releases/latest). File tải tay chưa ký cert nên SmartScreen sẽ hỏi — verify `SHA256SUMS.txt` trước, rồi **More info → Run anyway**.
+Hoặc tải `ZUS_x.y.z_x64-setup.exe` từ [bản mới nhất](https://github.com/8syncdev/zus-releases/releases/latest). File tải tay chưa ký cert nên SmartScreen sẽ hỏi — verify chữ ký minisign (xem [Verify a download](#verify-a-download)) trước, rồi **More info → Run anyway**.
 
 **macOS (Apple Silicon)** — tải `.dmg`, lần đầu mở: chuột phải app → **Open** → **Open**.
 
