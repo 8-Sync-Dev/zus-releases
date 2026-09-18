@@ -25,31 +25,30 @@
 
 <div align="center">
 
-### 📊 Số liệu thật · By the numbers
+### Release metrics
 
-<sub>Cập nhật 18/09/2026: nguồn <a href="https://docs.github.com/rest/releases">GitHub Releases API</a> (<code>download_count</code>) + Traffic API (số thô, không làm tròn, không tô vẽ). Real GitHub data, unrounded, unspun.</sub>
+<sub>Updated September 18, 2026. Source: GitHub Releases API (<code>download_count</code>) and Traffic API.</sub>
 
 </div>
 
-| Chỉ số / Metric | Giá trị / Value | |
+| Metric / Chỉ số | Value / Giá trị | Notes / Ghi chú |
 |---|---|---|
-| Bản phát hành đã ký / Signed releases | **5** | v1.1.0 → v1.4.0 · Jul 15 → Sep 17, 2026 |
-| Lượt tải bộ cài / Installer downloads | **321** | Windows 290 · Linux 22 · macOS 9 *(chưa tính `.sig` & feed)* |
-| Lượt kiểm tra cập nhật / Update-checks | **412** | `latest.json` feed polls |
-| Artifact ký số mỗi bản / Signed artifacts per release | **9** | mọi file kèm minisign `.sig` |
-| Hệ điều hành / Operating systems | **3** | Windows x64 · macOS arm64 · Linux (deb·rpm·AppImage) |
-| Bộ cài Windows / Windows installer | **~22 MB** | Tauri 2 + Rust, không nhúng Chromium |
+| Signed releases / Bản phát hành | 5 | v1.1.0 to v1.4.0 (Jul 15 - Sep 17, 2026) |
+| Installer downloads / Lượt tải bộ cài | 321 | Windows: 290, Linux: 22, macOS: 9 (excludes `.sig` files) |
+| Update feed checks / Kiểm tra cập nhật | 412 | `latest.json` feed requests |
+| Signed artifacts per release / Chữ ký số mỗi bản | 9 | Minisign `.sig` bundled with every binary |
+| Supported platforms / Hệ điều hành | 3 | Windows x64, macOS Apple Silicon, Linux (deb, rpm, AppImage) |
+| Windows installer size / Bộ cài Windows | 22.3 MB | Tauri 2 and Rust, without embedded Chromium |
 
 <div align="center">
 
 <img src="assets/stats/downloads-by-platform.png" width="880" alt="Installer downloads by platform: Windows 290, Linux 22, macOS 9">
 
-<img src="assets/stats/updates-by-release.png" width="880" alt="Update-check activity per release: latest.json feed polls per version">
+<img src="assets/stats/updates-by-release.png" width="880" alt="Update check activity per release: latest.json feed polls per version">
 
-<sub><b>Mới nhất / Latest: v1.4.0 (17/09/2026):</b> workflow "reality-gate" (execution provenance minted, persisted, projected), composer <code>/</code> command menu + installed skills, đổi tên hội thoại / conversation rename, biên nhận theo lượt / per-turn receipts. Xem <a href="https://github.com/8syncdev/zus-releases/releases/latest">release notes</a>.</sub>
+<sub><b>Latest release / Bản mới nhất: v1.4.0 (September 17, 2026).</b> Execution provenance tracking, composer slash-command menu, conversation renaming, and per-turn receipts. Full changelog in <a href="https://github.com/8syncdev/zus-releases/releases/latest">release notes</a>.</sub>
 
 </div>
-
 ---
 
 ## English
