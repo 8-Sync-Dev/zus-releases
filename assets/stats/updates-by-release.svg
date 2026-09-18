@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient><linearGradient id="gv" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4F7CFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+<rect width="880" height="320" rx="16" fill="#0A0A0B"/>
+<rect x="0.5" y="0.5" width="879" height="319" rx="16" fill="none" stroke="#26262B"/>
+<text x="32" y="42" fill="#E5E7EB" font-size="22" font-weight="700">Update-check activity per release</text>
+<text x="32" y="64" fill="#9CA3AF" font-size="13">latest.json feed polls — clients checking for updates while each version was current</text>
+<line x1="64" y1="256" x2="848" y2="256" stroke="#26262B"/>
+<text x="54" y="260" fill="#9CA3AF" font-size="11" text-anchor="end">0</text>
+<line x1="64" y1="201" x2="848" y2="201" stroke="#26262B"/>
+<text x="54" y="205" fill="#9CA3AF" font-size="11" text-anchor="end">60</text>
+<line x1="64" y1="147" x2="848" y2="147" stroke="#26262B"/>
+<text x="54" y="151" fill="#9CA3AF" font-size="11" text-anchor="end">121</text>
+<line x1="64" y1="92" x2="848" y2="92" stroke="#26262B"/>
+<text x="54" y="96" fill="#9CA3AF" font-size="11" text-anchor="end">182</text>
+<rect x="110" y="173" width="64" height="83" rx="8" fill="url(#gv)"/>
+<text x="142" y="163" fill="#E5E7EB" font-size="16" font-weight="700" text-anchor="middle">92</text>
+<text x="142" y="278" fill="#E5E7EB" font-size="14" font-weight="600" text-anchor="middle">v1.1.0</text>
+<text x="142" y="296" fill="#9CA3AF" font-size="11" text-anchor="middle">Jul 15</text>
+<rect x="267" y="174" width="64" height="82" rx="8" fill="url(#gv)"/>
+<text x="299" y="164" fill="#E5E7EB" font-size="16" font-weight="700" text-anchor="middle">91</text>
+<text x="299" y="278" fill="#E5E7EB" font-size="14" font-weight="600" text-anchor="middle">v1.2.0</text>
+<text x="299" y="296" fill="#9CA3AF" font-size="11" text-anchor="middle">Aug 26</text>
+<rect x="424" y="251" width="64" height="5" rx="8" fill="url(#gv)"/>
+<text x="456" y="241" fill="#E5E7EB" font-size="16" font-weight="700" text-anchor="middle">6</text>
+<text x="456" y="278" fill="#E5E7EB" font-size="14" font-weight="600" text-anchor="middle">v1.3.0</text>
+<text x="456" y="296" fill="#9CA3AF" font-size="11" text-anchor="middle">Sep 04</text>
+<rect x="581" y="92" width="64" height="164" rx="8" fill="url(#gv)"/>
+<text x="613" y="82" fill="#E5E7EB" font-size="16" font-weight="700" text-anchor="middle">182</text>
+<text x="613" y="278" fill="#E5E7EB" font-size="14" font-weight="600" text-anchor="middle">v1.3.1</text>
+<text x="613" y="296" fill="#9CA3AF" font-size="11" text-anchor="middle">Sep 04</text>
+<rect x="738" y="219" width="64" height="37" rx="8" fill="url(#gv)"/>
+<rect x="736" y="217" width="68" height="41" rx="9" fill="none" stroke="#22D3EE" stroke-width="1.5"/>
+<text x="770" y="209" fill="#E5E7EB" font-size="16" font-weight="700" text-anchor="middle">41</text>
+<text x="770" y="278" fill="#E5E7EB" font-size="14" font-weight="600" text-anchor="middle">v1.4.0</text>
+<text x="770" y="296" fill="#9CA3AF" font-size="11" text-anchor="middle">Sep 17</text>
+</svg>
