@@ -23,6 +23,35 @@
 
 ---
 
+<div align="center">
+
+### 📊 Số liệu thật · By the numbers
+
+<sub>Cập nhật 18/09/2026: nguồn <a href="https://docs.github.com/rest/releases">GitHub Releases API</a> (<code>download_count</code>) + Traffic API (số thô, không làm tròn, không tô vẽ). Real GitHub data, unrounded, unspun.</sub>
+
+</div>
+
+| Chỉ số / Metric | Giá trị / Value | |
+|---|---|---|
+| Bản phát hành đã ký / Signed releases | **5** | v1.1.0 → v1.4.0 · Jul 15 → Sep 17, 2026 |
+| Lượt tải bộ cài / Installer downloads | **321** | Windows 290 · Linux 22 · macOS 9 *(chưa tính `.sig` & feed)* |
+| Lượt kiểm tra cập nhật / Update-checks | **412** | `latest.json` feed polls |
+| Artifact ký số mỗi bản / Signed artifacts per release | **9** | mọi file kèm minisign `.sig` |
+| Hệ điều hành / Operating systems | **3** | Windows x64 · macOS arm64 · Linux (deb·rpm·AppImage) |
+| Bộ cài Windows / Windows installer | **~22 MB** | Tauri 2 + Rust, không nhúng Chromium |
+
+<div align="center">
+
+<img src="assets/stats/downloads-by-platform.png" width="880" alt="Installer downloads by platform: Windows 290, Linux 22, macOS 9">
+
+<img src="assets/stats/updates-by-release.png" width="880" alt="Update-check activity per release: latest.json feed polls per version">
+
+<sub><b>Mới nhất / Latest: v1.4.0 (17/09/2026):</b> workflow "reality-gate" (execution provenance minted, persisted, projected), composer <code>/</code> command menu + installed skills, đổi tên hội thoại / conversation rename, biên nhận theo lượt / per-turn receipts. Xem <a href="https://github.com/8syncdev/zus-releases/releases/latest">release notes</a>.</sub>
+
+</div>
+
+---
+
 ## English
 
 ZUS is an AI-native desktop IDE built with Tauri 2 and Rust. It combines the VS Code workbench with a local-first autonomous agent in a 22.3 MB installer.
