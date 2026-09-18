@@ -7,7 +7,7 @@
 <text x="194" y="117.0" fill="#E5E7EB" font-size="16" text-anchor="end" font-weight="600">Windows</text>
 <rect x="210" y="86" width="560" height="52" rx="9" fill="#111114"/>
 <rect x="210" y="86" width="560" height="52" rx="9" fill="url(#g)"/>
-<text x="784" y="118.0" fill="#E5E7EB" font-size="17" font-weight="700">290</text>
+<text x="784" y="118.0" fill="#E5E7EB" font-size="17" font-weight="700">291</text>
 <text x="194" y="187.0" fill="#E5E7EB" font-size="16" text-anchor="end" font-weight="600">Linux</text>
 <rect x="210" y="156" width="560" height="52" rx="9" fill="#111114"/>
 <rect x="210" y="156" width="42" height="52" rx="9" fill="url(#g)"/>
@@ -16,5 +16,5 @@
 <rect x="210" y="226" width="560" height="52" rx="9" fill="#111114"/>
 <rect x="210" y="226" width="17" height="52" rx="9" fill="url(#g)"/>
 <text x="241" y="258.0" fill="#E5E7EB" font-size="17" font-weight="700">9</text>
-<text x="848" y="282" fill="#9CA3AF" font-size="12" text-anchor="end">Windows leads: 286 of its 290 are the signed x64 setup.exe</text>
+<text x="848" y="282" fill="#9CA3AF" font-size="12" text-anchor="end">Windows leads: 287 of its 291 are the v1.1.0 signed x64 setup.exe</text>
 </svg>

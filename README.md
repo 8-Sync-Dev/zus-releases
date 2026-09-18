@@ -34,15 +34,15 @@
 | Metric / Chỉ số | Value / Giá trị | Notes / Ghi chú |
 |---|---|---|
 | Signed releases / Bản phát hành | 5 | v1.1.0 to v1.4.0 (Jul 15 - Sep 17, 2026) |
-| Installer downloads / Lượt tải bộ cài | 321 | Windows: 290, Linux: 22, macOS: 9 (excludes `.sig` files) |
-| Update feed checks / Kiểm tra cập nhật | 412 | `latest.json` feed requests |
+| Installer downloads / Lượt tải bộ cài | 322 | Windows: 291, Linux: 22, macOS: 9 (excludes `.sig` files) |
+| Update feed checks / Kiểm tra cập nhật | 416 | `latest.json` feed requests |
 | Signed artifacts per release / Chữ ký số mỗi bản | 9 | Minisign `.sig` bundled with every binary |
 | Supported platforms / Hệ điều hành | 3 | Windows x64, macOS Apple Silicon, Linux (deb, rpm, AppImage) |
 | Windows installer size / Bộ cài Windows | 22.3 MB | Tauri 2 and Rust, without embedded Chromium |
 
 <div align="center">
 
-<img src="assets/stats/downloads-by-platform.png" width="880" alt="Installer downloads by platform: Windows 290, Linux 22, macOS 9">
+<img src="assets/stats/downloads-by-platform.png" width="880" alt="Installer downloads by platform: Windows 291, Linux 22, macOS 9">
 
 <img src="assets/stats/updates-by-release.png" width="880" alt="Update check activity per release: latest.json feed polls per version">
 
