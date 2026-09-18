@@ -4,16 +4,16 @@
 
 # ZUS
 
-**The ~22 MB AI-native IDE that proves its work before you merge.**
+**A fast, lightweight AI IDE with an autonomous agent and verifiable test execution.**
 
-*Giao việc lớn cho AI mà không sợ nát project.*
+*Môi trường phát triển AI gọn nhẹ với agent tự động và kiểm chứng lệnh thực tế.*
 
 [![Latest release](https://img.shields.io/github/v/release/8syncdev/zus-releases?label=latest&color=4F7CFF)](https://github.com/8syncdev/zus-releases/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/8syncdev/zus-releases/total?color=22D3EE)](https://github.com/8syncdev/zus-releases/releases)
 [![Discord Community](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/Pparnq7bV7)
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-0A0A0B)
 
-[🇬🇧 English](#-english) · [🇻🇳 Tiếng Việt](#-tiếng-việt) · [💬 Discord Community](https://discord.gg/Pparnq7bV7)
+[English](#english) · [Tiếng Việt](#tiếng-việt) · [Discord Community](https://discord.gg/Pparnq7bV7)
 
 <br>
 
@@ -23,52 +23,51 @@
 
 ---
 
-## 🇬🇧 English
+## English
 
-You assign a 7-step refactoring task to an AI agent, grab a coffee, and return to your desk:
+ZUS is an AI-native desktop IDE built with Tauri 2 and Rust. It combines the VS Code workbench with a local-first autonomous agent in a 22.3 MB installer.
 
-Did it cleanly resolve the root cause, or did it quietly rewrite half your codebase and leave your Git working tree in flames?
-And why does a modern code editor require a 200 MB installer and gigabytes of idle RAM just to open a few source files?
+Most AI development environments package a Chromium browser, send code to remote indexing servers, and display code changes inside chat threads. ZUS uses a different architecture:
 
-ZUS is built around an uncompromising engineering reality: **Developers should never have to sacrifice workstation performance or codebase control to build with AI.**
+1. The desktop app pairs the operating system's native WebView with a Rust core, avoiding the memory overhead of bundled Chromium binaries.
+2. Semantic code search and vector embeddings run locally on your machine.
+3. Agent tasks run through a structured execution graph with operating system exit codes, Git checkpoints, and human approval gates.
 
-Instead of bundling an entire Chromium browser, ZUS pairs your operating system's native WebView with a high-throughput Rust engine. Instead of burying code changes inside endless chat transcripts, ZUS treats every task as a structured execution run: inspect touched files, review diffs, and verify actual operating system exit codes at a glance.
+### Core capabilities
 
-### What Makes ZUS Different
+#### Architecture and performance
+- **22.3 MB installer:** Tauri 2 uses the operating system's native WebView and a Rust backend. The Windows installer is 22.3 MB, compared to approximately 184 MB for Cursor and 199 MB for VS Code.
+- **Low resource consumption:** The application starts in under 400 ms on modern hardware. Idle memory consumption stays under 120 MB, keeping system resources available for build tools and test suites.
 
-#### 1. Architecture: ~22 MB Installer, Nearly 9x Lighter
-- **Native Desktop Engine:** Powered by Tauri 2 and a Rust core utilizing your OS native WebView. No bundled Chromium (Electron) bloat.
-- **Instant Cold Boot:** Starts in milliseconds with minimal idle memory consumption, leaving your RAM and CPU cycles for your compilation toolchain.
+#### Execution engines
+- **Interactive chat with Live Plan (`zus://agent`):** Conversational agent interface with a real-time task ledger tracking pending, running, completed, and blocked states.
+- **Workflow DAG canvas (`zus://workflow`):** Visual editor for designing and running multi-step pipelines (investigate, fix, verify, gate, review). Features loop detection and error branch tracing.
+- **Autonomous goal runner (`zus://goal`):** Multi-round execution loop that works across multiple files, verifying test results after each step.
 
-#### 2. Dual-Lane Agentic Execution
-- **Interactive Chat with Live Plan (`zus://agent`):** Chat directly with an agent backed by a real-time Live Plan task list (pending, running, completed, blocked). Task progression updates monotonically as code is written.
-- **Visual Workflow DAG Canvas (`zus://workflow`):** Build and run multi-step execution graphs (Investigate, Fix, Verify, Gate, Review) with visual node inspection, error branch tracing, and loop detection.
-- **Autonomous Multi-Round Loop (`zus://goal`):** Hands-off goal execution engine that tackles complex multi-file objectives with deterministic pass/fail verification on each round.
+#### Verification and provenance
+- **Deterministic exit codes:** Test, build, and lint steps execute in terminal processes and check actual process exit codes. Steps show green only when the process exits with status code 0.
+- **Execution provenance:** Every tool execution and verification run mints a provenance ID (`step-N-exec-M`), capturing the process ID, start and completion timestamps, working directory, and exit code.
+- **Raw log copy:** Failed steps include a one-click action to copy raw terminal output directly to your clipboard.
 
-#### 3. Deterministic Verification: Real Exit Codes
-- **True Exit Codes:** Verification commands (build, test, lint) run in real terminal processes and check real OS exit codes. Passing, failing, and unverified states are strictly isolated. No fake green badges or AI hallucinations.
-- **Execution Provenance:** Every tool and verification step mints an immutable provenance ID (`step-N-exec-M`), capturing the exact process ID, timestamps, environment, and exit status.
-- **One-Click Error Log Copy:** Instantly copy raw terminal error outputs from failed steps directly into your clipboard.
+#### Safety and approval gates
+- **Three autonomy levels:** Ask first (confirm every action), Edits (edit files automatically, confirm deletions and terminal commands), and Autopilot (unattended execution within workspace limits).
+- **Human approval gates:** Execution halts before sensitive operations such as file deletions, arbitrary shell scripts, or git commits. You can approve, reject, or return the step with notes.
+- **Anti-blind-retry guard:** When a command fails with unobserved external side effects (`effectUnknown`), the engine stops instead of repeating the command.
+- **Git checkpoints:** Automated git snapshots before file modifications. Rollback checks the working tree first and refuses to overwrite newer manual edits.
 
-#### 4. Safety Guardrails & Human Gates
-- **Granular Autonomy Levels:** Three distinct operating tiers: Ask first, Edits (auto-edit files with consent for deletions/commands), and Autopilot.
-- **Human Gate (Cửa duyệt):** Execution pauses at sensitive checkpoints (file deletions, system commands, commits). Approve, reject, or return with notes injected straight into the execution history.
-- **Anti-Blind-Retry Guard:** If an action fails with unknown external side-effects (`effectUnknown`), the engine halts rather than blindly retrying and thrashing your environment.
-- **Git Snapshot Checkpoints & Safe Rollback:** Automated Git checkpoints before destructive operations. Fail-closed rollback prevents overwriting changes made after a checkpoint.
+#### Privacy and local transparency
+- **On-device semantic search:** Vector embeddings and code graph indexes are generated and stored locally. Source files are not uploaded to an external vector database.
+- **Network egress ledger (`zus://network-ledger`):** An internal ledger recording outbound network requests from the IDE, including destination host, byte counts, and subsystem. Exports to CSV or JSON.
+- **Context inspector:** Displays the exact payload, system prompts, attachments, and token counts sent to the model for each turn.
+- **Token budget ceiling:** Per-session token caps that stop execution immediately when reached.
+- **Workspace file jail:** File system writes are restricted to the active project directory with per-command path allowlists.
 
-#### 5. Local-First Privacy & Complete Transparency
-- **On-Device Semantic Index:** Vector embeddings and codebase index remain strictly on your local disk.
-- **Network Egress Ledger (`zus://network-ledger`):** Real-time ledger recording every outgoing packet (destination host, request/response bytes, subsystem). Filter and export to CSV or JSON for compliance audits.
-- **Context Inspector:** Inspect the exact raw payload, prompt tokens, attached files, and system instructions sent to the model before it fires.
-- **Token Cost Circuit Breaker:** Hard session ceilings prevent runaway API quota exhaustion.
-- **Native Workspace Jail:** File modifications are strictly jailed within your workspace root with per-command allowlists.
-
-#### 6. Developer Experience & Extensibility
-- **Unified Diff Review:** Per-file and bulk diff inspector with visual indicators of additions and deletions before accepting changes.
-- **Context Pickers:** Target `@file`, `@folder`, `@symbol`, and `#git` to curate precise context without bloating token windows.
-- **Rules Ingestion:** Native support for `.cursorrules`, `CLAUDE.md`, and `.zus/rules`.
-- **Model Context Protocol (MCP):** Connect custom tools, local databases, and external APIs using industry-standard `mcp.json` declarations.
-- **The Full VS Code Workbench:** Monaco editor, integrated PTY terminal, visual Git graph, project search, Open VSX extensions marketplace, and 14 curated themes.
+#### Workbench and extensibility
+- **Unified diff review:** View unified and side-by-side diffs across all modified files before accepting changes.
+- **Context targeting:** Target `@file`, `@folder`, `@symbol`, and `#git` directly in prompts to control token consumption.
+- **Rules support:** Reads project conventions from `.cursorrules`, `CLAUDE.md`, and `.zus/rules`.
+- **Model Context Protocol (MCP):** Connect external tools, databases, and APIs through standard `mcp.json` definitions.
+- **VS Code compatibility:** Monaco editor, integrated PTY terminal, visual Git graph, project search, Open VSX extension support, and 14 editor themes.
 
 <div align="center">
 <img src="assets/run-settled-en.webp" alt="Settled execution run with visual workflow and verification proof" width="880">
@@ -80,11 +79,11 @@ Instead of bundling an entire Chromium browser, ZUS pairs your operating system'
 <img src="assets/human-gate-en.webp" alt="ZUS Human Gate: Agent halting at sensitive checkpoints for review" width="435"> <img src="assets/run-packet-en.webp" alt="ZUS Run Packet: Execution ledger and verification summary" width="435">
 </div>
 
-### Install
+### Installation
 
 #### Windows
 
-Install via Winget (avoids SmartScreen prompts):
+Install via Winget:
 
 ```powershell
 winget install 8syncdev.ZUS
@@ -97,13 +96,13 @@ scoop bucket add zus https://github.com/8syncdev/scoop-zus
 scoop install zus
 ```
 
-Or download `ZUS_x.y.z_x64-setup.exe` directly from the [Latest release](https://github.com/8syncdev/zus-releases/releases/latest).
+Or download `ZUS_x.y.z_x64-setup.exe` directly from the [latest release](https://github.com/8syncdev/zus-releases/releases/latest).
 
-> **SmartScreen note:** Manual installers do not yet carry an enterprise certificate. Installing via **winget or scoop bypasses the warning**. For a manually downloaded `.exe`, verify the minisign signature below, then click **More info → Run anyway**.
+> **SmartScreen notice:** Direct installer downloads do not yet carry an enterprise certificate. Installing via winget or scoop avoids this prompt. For a manually downloaded executable, verify the minisign signature below, then click **More info -> Run anyway**.
 
 #### macOS (Apple Silicon)
 
-Download `ZUS_x.y.z_aarch64.dmg`. On first launch, right-click the app and choose **Open → Open**, or execute:
+Download `ZUS_x.y.z_aarch64.dmg`. On first launch, right-click the application and select **Open -> Open**, or run:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/ZUS.app
@@ -111,16 +110,16 @@ xattr -dr com.apple.quarantine /Applications/ZUS.app
 
 #### Linux
 
-| Distro | Command |
+| Distribution | Command |
 |---|---|
 | Debian / Ubuntu | `sudo apt install ./ZUS_x.y.z_amd64.deb` |
 | Fedora / RHEL | `sudo dnf install ./ZUS-x.y.z-1.x86_64.rpm` |
 | Any | `chmod +x ZUS_x.y.z_amd64.AppImage && ./ZUS_x.y.z_amd64.AppImage` |
 
-### Verify a download
+### Download verification
 
-The trust anchor is the **minisign signature** (`.sig`) shipped next to every release artifact, generated with the ZUS updater key `1c2f579d3d50beda`.
-The app verifies these signatures automatically against its compiled-in public key before installing any update: any tampered binary is rejected fail-closed.
+Every release includes a **minisign signature** (`.sig`) generated with the ZUS updater key `1c2f579d3d50beda`.
+The application verifies these signatures against its compiled-in public key before installing any update. Any modified binary is rejected.
 
 Use `SHA256SUMS.txt` to verify download integrity:
 
@@ -133,7 +132,7 @@ minisign -Vm SHA256SUMS.txt -x SHA256SUMS.txt.sig \
   -P RWQcL1edPVC+2lpQSHFmsRXjz8wl4PI2PNpttRs7zZ7lqAvtNZU18tho
 ```
 
-To verify an individual artifact manually (such as `ZUS_x.y.z_amd64.AppImage` and its `.sig`):
+To verify an individual download manually (for example, `ZUS_x.y.z_amd64.AppImage` and its signature):
 
 ```bash
 base64 -d ZUS_x.y.z_amd64.AppImage.sig > artifact.minisig
@@ -141,63 +140,61 @@ minisign -Vm ZUS_x.y.z_amd64.AppImage -x artifact.minisig \
   -P RWQcL1edPVC+2lpQSHFmsRXjz8wl4PI2PNpttRs7zZ7lqAvtNZU18tho
 ```
 
-### Auto-updates
+### Automatic updates
 
-Install once. On every launch, ZUS queries `latest.json` from the latest release and applies updates in place. **Every update binary is cryptographically verified before installation**. Works seamlessly across all installation channels.
+On launch, ZUS queries `latest.json` from the latest release and applies updates in place. The app cryptographically verifies every update binary before installation.
 
 ### Community
 
-Have questions, feature suggestions, or looking to share agent workflows?
-Join the official ZUS Discord community: **[discord.gg/Pparnq7bV7](https://discord.gg/Pparnq7bV7)**.
+Join the official ZUS Discord community to ask questions, share workflows, or report issues: **[discord.gg/Pparnq7bV7](https://discord.gg/Pparnq7bV7)**.
 
 ---
 
-## 🇻🇳 Tiếng Việt
+## Tiếng Việt
 
-Bạn giao một task refactor 7 bước cho AI, đi pha cốc cà phê rồi quay lại:
+ZUS là môi trường phát triển tích hợp (IDE) chuyên dụng cho AI, xây dựng trên nền tảng Tauri 2 và Rust. Ứng dụng kết hợp đầy đủ không gian làm việc của VS Code với agent tự động cục bộ, đóng gói trong bộ cài 22.3 MB.
 
-Liệu nó đã giải quyết triệt để lỗi, hay âm thầm viết lại cả dự án khiến Git đỏ lòm?
-Và tại sao một công cụ lập trình lại cần bộ cài hơn 200 MB, nuốt chửng hàng gigabyte RAM chỉ để mở vài file nguồn?
+Phần lớn các IDE AI hiện nay phân phối kèm một bản Chromium hoàn chỉnh, tải mã nguồn lên máy chủ để lập chỉ mục và hiển thị kết quả qua các đoạn chat dài. ZUS chọn hướng kiến trúc khác:
 
-ZUS được sinh ra từ một câu hỏi thực tế: **Tại sao lập trình viên phải đánh đổi hiệu năng phần cứng và sự an toàn của mã nguồn chỉ để dùng AI?**
+1. Giao diện sử dụng WebView của hệ điều hành kết hợp backend bằng Rust, loại bỏ chi phí tài nguyên của Chromium đóng gói sẵn.
+2. Lập chỉ mục ngữ nghĩa và vector embedding chạy trực tiếp trên phần cứng của bạn.
+3. Mọi thao tác của agent được điều phối qua đồ thị thực thi có cấu trúc, kiểm tra mã thoát (exit code) thực tế từ terminal, tạo checkpoint bằng Git và dừng lại tại các cửa duyệt có người kiểm tra.
 
-Thay vì nhồi nhét cả một trình duyệt Chromium cồng kềnh vào máy bạn, ZUS chọn kiến trúc desktop native với lõi Rust siêu nhẹ. Thay vì bắt bạn lội qua hàng chục tin nhắn chat để mò xem code đã đổi những gì, ZUS biến mỗi phiên làm việc thành một tiến trình minh bạch: thấy rõ từng file đã sửa, diff trực quan và kết quả kiểm chứng thực tế từ terminal.
+### Tính năng cốt lõi
 
-### Điểm khác biệt của ZUS
+#### Kiến trúc và hiệu năng
+- **Bộ cài 22.3 MB:** Kiến trúc Tauri 2 sử dụng WebView hệ điều hành và lõi Rust. Bộ cài Windows có dung lượng 22.3 MB, so với khoảng 184 MB của Cursor và 199 MB của VS Code.
+- **Khởi động nhanh và tiết kiệm tài nguyên:** Thời gian mở ứng dụng dưới 400 ms trên phần cứng phổ thông. Bộ nhớ RAM ở trạng thái chờ dưới 120 MB, nhường tài nguyên cho trình biên dịch và công cụ kiểm thử cục bộ.
 
-#### 1. Kiến trúc: Bộ cài ~22 MB, nhẹ hơn gần 9 lần
-- **Lõi Desktop Native:** Dựng trên Tauri 2 và lõi Rust hiệu năng cao, tận dụng WebView có sẵn của hệ điều hành. Không nhúng Chromium (Electron).
-- **Khởi động tức thì:** Mở app chỉ tính bằng mili-giây, trả lại toàn bộ RAM và CPU cho chính dự án của bạn thay vì tiêu tốn cho vỏ bọc IDE.
+#### Cơ chế thực thi của agent
+- **Chat tương tác với Live Plan (`zus://agent`):** Giao diện trò chuyện trực tiếp với agent có danh sách công việc hiển thị trạng thái thực tế: đang chờ, đang chạy, hoàn tất hoặc bị chặn.
+- **Đồ thị workflow trực quan (`zus://workflow`):** Trình soạn thảo DAG để thiết kế và chạy chuỗi tác vụ nhiều bước (khảo sát, sửa mã nguồn, kiểm chứng, cửa duyệt, rà soát). Tích hợp cơ chế phát hiện vòng lặp và truy vết nhánh lỗi.
+- **Vòng lặp tự động (`zus://goal`):** Tự động giải quyết bài toán phức tạp trên nhiều file, kiểm chứng kết quả sau mỗi vòng lặp.
 
-#### 2. Hai chế độ thực thi Agentic linh hoạt
-- **Chat tương tác kèm Kế hoạch thời gian thực (`zus://agent`):** Trò chuyện trực tiếp với agent có tích hợp danh sách Live Plan (đang chờ, đang chạy, hoàn thành, bị chặn). Tiến trình công việc hiển thị đơn luồng rõ ràng ngay khi viết code.
-- **Sơ đồ Workflow DAG trực quan (`zus://workflow`):** Xây dựng và thực thi các đồ thị công việc nhiều bước (Khảo sát, Sửa, Kiểm chứng, Cửa duyệt, Rà soát) với bảng thông tin từng node, truy vết nhánh lỗi và tự động phát hiện vòng lặp vô tận.
-- **Vòng lặp Autonomous Goal (`zus://goal`):** Engine tự giải quyết bài toán lớn xuyên suốt nhiều file, chạy kiểm chứng pass/fail tự động sau mỗi lượt.
+#### Kiểm chứng tất định và nguồn gốc thực thi
+- **Mã thoát (exit code) thực tế:** Các bước build, test và lint chạy trực tiếp trong terminal và kiểm tra mã thoát của tiến trình. Bước thực thi chỉ báo trạng thái đạt khi câu lệnh trả về mã 0.
+- **Nguồn gốc thực thi (Execution Provenance):** Mỗi lần gọi công cụ hay kiểm chứng đều được cấp một định danh (`step-N-exec-M`), ghi nhận process ID, mốc thời gian, thư mục làm việc và mã thoát.
+- **Sao chép log lỗi trực tiếp:** Hộp thông báo lỗi của bước hỏng tích hợp nút sao chép toàn bộ nội dung terminal vào clipboard để phân tích.
 
-#### 3. Kiểm chứng tất định: Test thật mới báo xanh
-- **Bắt mã thoát (Exit Code) thực tế:** Mọi lệnh kiểm chứng (build, test, lint) đều chạy trong terminal thật và nhận exit code chuẩn từ hệ điều hành. Đạt, lỗi hay chưa kiểm tra là ba trạng thái tách biệt hoàn toàn. Không bao giờ tạo tiến độ ảo hay lừa mắt bằng màu xanh giả tạo.
-- **Xuất xứ thực thi (Execution Provenance):** Mỗi lần chạy tool hoặc kiểm chứng đều được gắn định danh bất biến (`step-N-exec-M`), ghi nhận chính xác process ID, mốc thời gian, môi trường và trạng thái kết thúc.
-- **Copy nhanh log lỗi:** Nút copy trực quan ngay trên hộp log của bước hỏng, sao chép nguyên văn output lỗi vào clipboard chỉ với một click.
+#### Kiểm soát an toàn và can thiệp thủ công
+- **Ba mức tự chủ:** Hỏi trước mọi thao tác (Ask first), Tự sửa file và hỏi khi xóa hoặc chạy lệnh (Edits), Tự động hoàn toàn trong thư mục dự án (Autopilot).
+- **Cửa duyệt (Human Gate):** Tạm dừng tiến trình trước các thao tác nhạy cảm như xóa tệp tin, chạy lệnh shell hoặc commit git. Người dùng có thể chấp thuận, từ chối hoặc gửi lại phản hồi kèm ghi chú.
+- **Chặn thử lại mù quáng (Anti-Blind-Retry):** Khi một thao tác gặp lỗi mà chưa xác định được tác động ngoại vi (`effectUnknown`), hệ thống sẽ dừng lại thay vì tự động chạy lại liên tục.
+- **Checkpoint qua Git:** Tự động lưu snapshot trạng thái Git trước khi can thiệp sâu. Tính năng hoàn tác sẽ kiểm tra cây thư mục và từ chối ghi đè nếu bạn đã chỉnh sửa file sau thời điểm checkpoint.
 
-#### 4. Vòng kiểm soát an toàn & Cửa duyệt (Human Gate)
-- **3 mức tự chủ rõ ràng:** Ask first (hỏi trước mọi thao tác), Edits (tự sửa file, hỏi khi xóa file hoặc chạy lệnh), và Autopilot.
-- **Cửa duyệt (Human Gate):** Tiến trình tự động dừng lại trước các thao tác rủi ro (xóa file, chạy lệnh hệ thống, commit). Bạn có thể duyệt tiếp, từ chối, hoặc trả về kèm ghi chú được lưu thẳng vào lịch sử bước.
-- **Chặn thử lại mù quáng (Anti-Blind-Retry):** Khi một bước gặp lỗi mà chưa rõ tác động ngoại vi (`effectUnknown`), hệ thống sẽ dừng lại xin ý kiến thay vì cắm đầu chạy lại làm hỏng môi trường.
-- **Bản chụp Checkpoint qua Git & Hoàn tác an toàn:** Tự động tạo snapshot Git trước các bước can thiệp sâu. Cơ chế hoàn tác dừng lại cảnh báo nếu phát hiện file bị sửa đổi sau checkpoint, bảo vệ tuyệt đối code bạn vừa gõ.
+#### Quyền riêng tư và minh bạch dữ liệu
+- **Tìm kiếm ngữ nghĩa tại máy:** Vector embedding và chỉ mục đồ thị mã nguồn được lưu trữ trực tiếp trên ổ cứng. Mã nguồn của bạn không bị tải lên cơ sở dữ liệu vector bên ngoài.
+- **Sổ cái xuất mạng (`zus://network-ledger`):** Bảng kiểm toán nội bộ ghi lại từng request HTTP phát ra từ IDE, bao gồm địa chỉ máy chủ, lượng byte truyền nhận và hệ thống con thực hiện. Hỗ trợ xuất dữ liệu ra file CSV hoặc JSON.
+- **Thanh tra ngữ cảnh (Context Inspector):** Xem chi tiết nội dung prompt, system prompt, tệp đính kèm và số lượng token gửi tới mô hình trước mỗi lượt gọi.
+- **Trần chi phí token:** Cài đặt giới hạn token tối đa cho từng phiên làm việc để tránh vượt hạn mức quota ngoài ý muốn.
+- **Khoanh vùng thư mục dự án (Workspace Jail):** Mọi thao tác ghi tệp tin bị giới hạn chặt chẽ trong thư mục gốc của dự án với danh sách lệnh được cấp phép.
 
-#### 5. Quyền riêng tư Local-First & Minh bạch tuyệt đối
-- **Index ngữ nghĩa lưu hoàn toàn trên máy:** Cơ sở dữ liệu vector và chỉ mục ngữ nghĩa nằm trọn trên ổ cứng của bạn.
-- **Sổ cái xuất mạng (`zus://network-ledger`):** Bảng ghi nhận thời gian thực mọi kết nối ra ngoài máy (host đích, byte gửi/nhận, hệ thống con). Lọc và xuất file CSV hoặc JSON để phục vụ kiểm toán an toàn.
-- **Thanh tra ngữ cảnh (Context Inspector):** Xem chi tiết payload gửi cho model: system prompt, lịch sử hội thoại, file đính kèm và lượng token tiêu tốn trước mỗi lượt chạy.
-- **Bộ ngắt mạch chi phí (Token Budget):** Đặt trần token cho từng phiên. Chạm ngưỡng là dừng, không bao giờ âm thầm tiêu lạm quota.
-- **Khoanh vùng thao tác (Workspace Jail):** Thao tác ghi file bị giới hạn nghiêm ngặt trong thư mục dự án với danh sách lệnh cho phép rõ ràng.
-
-#### 6. Trải nghiệm lập trình quen thuộc & Khả năng mở rộng
-- **Bảng rà soát Diff hợp nhất:** Xem diff trực quan từng file hoặc hàng loạt trước khi chấp nhận thay đổi.
-- **Bộ chọn ngữ cảnh thông minh:** Sử dụng `@file`, `@folder`, `@symbol`, `#git` để nạp đúng dữ liệu cần thiết, tránh phình token thừa thãi.
-- **Hỗ trợ Rules chuẩn:** Tự động nhận diện `.cursorrules`, `CLAUDE.md`, và `.zus/rules`.
-- **Giao thức MCP (Model Context Protocol):** Cắm thêm tool bên ngoài, kết nối database hay CLI nội bộ qua file `mcp.json` chuẩn công nghiệp.
-- **Đầy đủ Workbench VS Code:** Trình soạn thảo Monaco, terminal tích hợp, Git graph, tìm kiếm dự án, cài extension từ Open VSX và 14 theme giao diện tinh chỉnh sẵn.
+#### Trải nghiệm lập trình và khả năng mở rộng
+- **Rà soát diff hợp nhất:** Xem diff trực quan từng file hoặc toàn bộ các thay đổi trước khi xác nhận gộp mã nguồn.
+- **Bộ chọn ngữ cảnh chính xác:** Nạp ngữ cảnh tập trung với cú pháp `@file`, `@folder`, `@symbol`, và `#git`.
+- **Hỗ trợ quy ước dự án:** Tự động đọc và tuân thủ cấu hình từ `.cursorrules`, `CLAUDE.md`, và `.zus/rules`.
+- **Giao thức MCP (Model Context Protocol):** Mở rộng công cụ qua tệp cấu hình `mcp.json` tiêu chuẩn.
+- **Tương thích VS Code:** Trình soạn thảo Monaco, terminal PTY tích hợp, đồ thị Git, tìm kiếm toàn dự án, chợ tiện ích Open VSX và 14 giao diện màu tùy chỉnh.
 
 <div align="center">
 <img src="assets/workbench-vi.webp" alt="ZUS Workbench: Monaco editor, terminal, file tree, và AI workflow graph" width="880">
@@ -213,7 +210,7 @@ Thay vì nhồi nhét cả một trình duyệt Chromium cồng kềnh vào máy
 
 #### Windows
 
-Cài nhanh qua Winget (không dính cảnh báo SmartScreen):
+Cài qua Winget:
 
 ```powershell
 winget install 8syncdev.ZUS
@@ -226,13 +223,13 @@ scoop bucket add zus https://github.com/8syncdev/scoop-zus
 scoop install zus
 ```
 
-Hoặc tải trực tiếp file `ZUS_x.y.z_x64-setup.exe` từ [Bản phát hành mới nhất](https://github.com/8syncdev/zus-releases/releases/latest).
+Hoặc tải trực tiếp file `ZUS_x.y.z_x64-setup.exe` từ [bản phát hành mới nhất](https://github.com/8syncdev/zus-releases/releases/latest).
 
-> **Lưu ý về SmartScreen:** Bản cài tải tay chưa gắn chứng chỉ doanh nghiệp nên Windows sẽ hỏi lại. Cài qua **winget hoặc scoop sẽ bỏ qua bước này**. Nếu tải file `.exe` thủ công, bạn có thể đối chiếu chữ ký minisign bên dưới, sau đó bấm **More info → Run anyway**.
+> **Lưu ý về SmartScreen:** Bản cài tải tay chưa gắn chứng chỉ doanh nghiệp nên Windows sẽ hỏi lại. Cài qua winget hoặc scoop sẽ bỏ qua bước này. Nếu tải file `.exe` thủ công, bạn có thể đối chiếu chữ ký minisign bên dưới, sau đó bấm **More info -> Run anyway**.
 
 #### macOS (Apple Silicon)
 
-Tải file `ZUS_x.y.z_aarch64.dmg` từ release. Bản phát hành chưa notarize: trong lần đầu mở, click chuột phải vào app chọn **Open → Open**, hoặc chạy lệnh trong terminal:
+Tải file `ZUS_x.y.z_aarch64.dmg` từ release. Trong lần đầu mở, click chuột phải vào app chọn **Open -> Open**, hoặc chạy lệnh:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/ZUS.app
@@ -240,7 +237,7 @@ xattr -dr com.apple.quarantine /Applications/ZUS.app
 
 #### Linux
 
-| Distro | Lệnh cài đặt |
+| Bản phân phối | Lệnh cài đặt |
 |---|---|
 | Debian / Ubuntu | `sudo apt install ./ZUS_x.y.z_amd64.deb` |
 | Fedora / RHEL | `sudo dnf install ./ZUS-x.y.z-1.x86_64.rpm` |
@@ -248,10 +245,10 @@ xattr -dr com.apple.quarantine /Applications/ZUS.app
 
 ### Xác thực bản tải về
 
-Mỗi bản phát hành đều đi kèm chữ ký số **minisign** (`.sig`) tạo bởi khóa updater của ZUS: `1c2f579d3d50beda`.
-Ứng dụng sẽ tự động đối chiếu chữ ký này với public key tích hợp bên trong trước khi cài đặt hoặc cập nhật: file bị can thiệp sẽ bị từ chối ngay lập tức.
+Mỗi bản phát hành đi kèm chữ ký số **minisign** (`.sig`) tạo bởi khóa updater của ZUS: `1c2f579d3d50beda`.
+Ứng dụng tự động đối chiếu chữ ký này với public key tích hợp bên trong trước khi cài đặt hoặc cập nhật. Mọi file bị can thiệp sẽ bị từ chối.
 
-`SHA256SUMS.txt` dùng để kiểm tra độ nguyên vẹn của file tải về:
+Kiểm tra tính toàn vẹn qua file `SHA256SUMS.txt`:
 
 ```bash
 # Kiểm tra mã băm SHA256:
@@ -262,7 +259,7 @@ minisign -Vm SHA256SUMS.txt -x SHA256SUMS.txt.sig \
   -P RWQcL1edPVC+2lpQSHFmsRXjz8wl4PI2PNpttRs7zZ7lqAvtNZU18tho
 ```
 
-Để xác thực thủ công một file cài đặt cụ thể (ví dụ `ZUS_x.y.z_amd64.AppImage` và file `.sig` đi kèm):
+Xác thực thủ công một file cài đặt cụ thể (ví dụ `ZUS_x.y.z_amd64.AppImage` và file `.sig` đi kèm):
 
 ```bash
 base64 -d ZUS_x.y.z_amd64.AppImage.sig > artifact.minisig
@@ -272,12 +269,11 @@ minisign -Vm ZUS_x.y.z_amd64.AppImage -x artifact.minisig \
 
 ### Tự động cập nhật
 
-Cài đặt một lần duy nhất. Mỗi khi khởi động, ZUS sẽ tự kiểm tra file `latest.json` ở bản release mới nhất và tiến hành cập nhật tại chỗ. **Mọi bản update đều phải vượt qua bước kiểm tra chữ ký số trước khi cài đặt**. Cơ chế này áp dụng đồng nhất cho mọi phương thức cài đặt.
+Mỗi khi khởi động, ZUS kiểm tra file `latest.json` ở bản release mới nhất và cập nhật tại chỗ. Ứng dụng kiểm tra chữ ký số của mọi bản cập nhật trước khi cài đặt.
 
 ### Tham gia cộng đồng
 
-Bạn có câu hỏi về workflow, muốn góp ý tính năng hoặc báo lỗi trực tiếp tới đội ngũ kỹ sư?
-Gia nhập Discord chính thức của ZUS: **[discord.gg/Pparnq7bV7](https://discord.gg/Pparnq7bV7)**.
+Gia nhập Discord chính thức của ZUS để trao đổi về workflow, đóng góp ý kiến hoặc báo lỗi: **[discord.gg/Pparnq7bV7](https://discord.gg/Pparnq7bV7)**.
 
 ---
 
@@ -290,4 +286,3 @@ Gia nhập Discord chính thức của ZUS: **[discord.gg/Pparnq7bV7](https://di
 *Sync is a loop: two systems, one link.*
 
 </div>
-
