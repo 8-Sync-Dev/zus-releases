@@ -1,6 +1,6 @@
 name: Build ZUS
 # CHẶNG 1 của pipeline 2 chặng. Build 3 OS ngay tại repo public này rồi upload lên release.
-# Chặng 2 (`.github/workflows/sign.yml` bên repo PRIVATE 8syncdev/zus) tải về, ký bằng khoá
+# Chặng 2 (`.github/workflows/sign.yml` bên repo PRIVATE 8-Sync-Dev/zus) tải về, ký bằng khoá
 # THẬT, dựng + ký `latest.json`, rồi đẩy ngược lên đây.
 #
 # Vì sao tách 2 chặng:
@@ -11,7 +11,7 @@ name: Build ZUS
 #     KHÔNG copy sang đây.
 #
 # Source private KHÔNG bị lộ:
-#   - Checkout bằng **deploy key read-only scope đúng `8syncdev/zus`** (không phải PAT toàn
+#   - Checkout bằng **deploy key read-only scope đúng `8-Sync-Dev/zus`** (không phải PAT toàn
 #     account). Source chỉ nằm trên runner tạm rồi bị huỷ; repo này không chứa source.
 #   - Log build công khai chỉ in code khi BIÊN DỊCH LỖI. Đã chặn từ gốc: codebase có 0 khối
 #     `cfg(target_os = "windows"/"macos")` (Rust biên dịch giống hệt mọi OS) và `scripts/release.sh`
@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag đã push trên 8syncdev/zus (vd v1.2.0)'
+        description: 'Tag đã push trên 8-Sync-Dev/zus (vd v1.2.0)'
         required: true
       platforms:
         description: 'linux = smoke test nhanh; all = phát hành thật'
@@ -63,7 +63,7 @@ jobs:
       - name: Checkout source private (deploy key read-only)
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          repository: 8syncdev/zus
+          repository: 8-Sync-Dev/zus
           ref: ${{ inputs.ref || inputs.tag }}
           ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
           persist-credentials: false
@@ -147,7 +147,7 @@ jobs:
         with:
           tagName: ${{ inputs.tag }}
           releaseName: 'ZUS ${{ inputs.tag }}'
-          releaseBody: 'See install & verify instructions in the [README](https://github.com/8syncdev/zus-releases#install). Verify downloads with SHA256SUMS.txt.'
+          releaseBody: 'See install & verify instructions in the [README](https://github.com/8-Sync-Dev/zus-releases#install). Verify downloads with SHA256SUMS.txt.'
           # Release để DRAFT tới khi chặng 2 ký xong: manifest lúc này còn mang chữ ký RÁC, publish
           # ra là updater của user fail-closed từ chối ⇒ kênh cập nhật chết im lặng.
           releaseDraft: true
