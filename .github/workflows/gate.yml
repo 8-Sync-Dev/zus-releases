@@ -117,6 +117,15 @@ jobs:
           ref: ${{ env.SHA }}
           ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
           persist-credentials: false
+      # This log is public. A gate.sh without GATE_QUIET (anything older than
+      # ship/gate-under-5min) prints tsc/cargo errors, i.e. private paths and names, straight
+      # into it (job 117344346857 of run 39014686667). Gate nothing from such a commit.
+      - name: Quiet gate.sh required
+        id: quiet
+        run: |
+          grep -q 'GATE_QUIET' scripts/gate.sh && exit 0
+          echo "::error::scripts/gate.sh at this commit has no GATE_QUIET mode; merge dev-fe (with ship/gate-under-5min) into the branch and push"
+          exit 1
       - name: What changed
         id: changed
         env:
@@ -214,7 +223,8 @@ jobs:
           bash scripts/gate.sh rust
       # The lane logs, encrypted to the owner. `always()`: a red lane is the one worth reading.
       - name: Encrypt lane logs
-        if: always()
+        # No lane ran when the quiet check refused the commit: nothing to keep (and `age` is not installed yet).
+        if: always() && steps.quiet.outcome == 'success'
         env:
           RECIPIENT: ${{ vars.GATE_LOG_AGE_RECIPIENT }}
         run: |
@@ -235,8 +245,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ZUS_STATUS_PAT }}
           OUTCOME: ${{ job.status }}
+          QUIET: ${{ steps.quiet.outcome }}
         run: |
+          [ "$QUIET" = failure ] && OUTCOME=stale
           case "$OUTCOME" in
+            stale) state=error; desc="gate.sh predates quiet mode: merge dev-fe (after #43) and push" ;;
             success) state=success; desc="FE+Rust lanes green" ;;
             cancelled) state=error; desc="cancelled" ;;
             *) state=failure; desc="a lane is red: decrypt artifact gate-logs" ;;
