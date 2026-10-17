@@ -34,14 +34,24 @@ jobs:
     env:
       POST: ${{ github.event_name == 'schedule' || inputs.post }}
     steps:
-      - name: Checkout zus (deploy key, read-only, full history)
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          repository: 8-Sync-Dev/zus
-          ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
-          persist-credentials: false
-          fetch-depth: 0
+      # Not actions/checkout: its fetch prints every ref (`* [new branch] ship/…`) into this public
+      # log (run 39045053627). A quiet fetch into a bare repo, dev-fe + ship/* only.
+      - name: Fetch zus refs (deploy key, read-only, quiet)
+        env:
+          KEY: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
+        run: |
+          set -eu
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/zus_key"' EXIT
+          printf '%s\n' "$KEY" > "$RUNNER_TEMP/zus_key"
+          # GitHub's published ed25519 host key (api.github.com/meta).
+          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/zus_key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes"
+          git init -q --bare zus.git
+          git -C zus.git fetch -q --no-tags git@github.com:8-Sync-Dev/zus.git \
+            '+refs/heads/dev-fe:refs/remotes/origin/dev-fe' '+refs/heads/ship/*:refs/remotes/origin/ship/*'
       - name: Check ship/* heads without a PR
+        working-directory: zus.git
         env:
           GH_TOKEN: ${{ secrets.ZUS_STATUS_PAT }}
         run: |
@@ -53,7 +63,9 @@ jobs:
             echo "$prs" | grep -qxF "$ref" && continue
             sha=$(git rev-parse "origin/$ref")
             checked=$((checked + 1))
-            if git merge-tree --write-tree --no-messages origin/dev-fe "$sha" >/dev/null 2>&1; then
+            # A bare repo has no work tree to read .gitattributes from (`CHANGELOG.md merge=union`
+            # and friends): take them from the head, as a dev merging dev-fe into it would.
+            if git --attr-source="$sha" merge-tree --write-tree --no-messages origin/dev-fe "$sha" >/dev/null 2>&1; then
               clean=$((clean + 1)); state=success; desc="merges cleanly into dev-fe"
             else
               conflict=$((conflict + 1)); state=failure; desc="conflicts with dev-fe: merge dev-fe and push"
