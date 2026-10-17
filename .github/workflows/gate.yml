@@ -223,7 +223,8 @@ jobs:
           bash scripts/gate.sh rust
       # The lane logs, encrypted to the owner. `always()`: a red lane is the one worth reading.
       - name: Encrypt lane logs
-        if: always()
+        # No lane ran when the quiet check refused the commit: nothing to keep (and `age` is not installed yet).
+        if: always() && steps.quiet.outcome == 'success'
         env:
           RECIPIENT: ${{ vars.GATE_LOG_AGE_RECIPIENT }}
         run: |
