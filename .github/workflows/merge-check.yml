@@ -1,0 +1,68 @@
+name: Merge check
+
+# Early conflict signal for the PRIVATE repo 8-Sync-Dev/zus (idea from scion phase 1: find the
+# conflict before the push or the PR, not at merge time). GitHub already marks open PRs that
+# conflict, but a `ship/*` branch without a PR gets nothing, so it can drift for days.
+#
+# For every `ship/*` head with no open PR: `git merge-tree --write-tree origin/dev-fe <head>`.
+# No zus code runs here. The result goes back as commit status `merge` on that head (posted only
+# when the state changes):
+#   success "merges cleanly into dev-fe"
+#   failure "conflicts with dev-fe: merge dev-fe and push"
+# This log is PUBLIC: it prints counts only, never branch or file names.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      post:
+        description: Post `merge` statuses on zus (false = dry run, counts only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: merge-check
+  cancel-in-progress: true
+
+jobs:
+  merge-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      POST: ${{ github.event_name == 'schedule' || inputs.post }}
+    steps:
+      - name: Checkout zus (deploy key, read-only, full history)
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: 8-Sync-Dev/zus
+          ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check ship/* heads without a PR
+        env:
+          GH_TOKEN: ${{ secrets.ZUS_STATUS_PAT }}
+        run: |
+          set -eu
+          R=repos/8-Sync-Dev/zus
+          prs=$(gh api "$R/pulls?state=open&per_page=100" --paginate --jq '.[].head.ref')
+          checked=0 conflict=0 clean=0 posted=0
+          for ref in $(git for-each-ref --format='%(refname:strip=3)' 'refs/remotes/origin/ship/'); do
+            echo "$prs" | grep -qxF "$ref" && continue
+            sha=$(git rev-parse "origin/$ref")
+            checked=$((checked + 1))
+            if git merge-tree --write-tree --no-messages origin/dev-fe "$sha" >/dev/null 2>&1; then
+              clean=$((clean + 1)); state=success; desc="merges cleanly into dev-fe"
+            else
+              conflict=$((conflict + 1)); state=failure; desc="conflicts with dev-fe: merge dev-fe and push"
+            fi
+            [ "$POST" = true ] || continue
+            old=$(gh api "$R/commits/$sha/status" --jq '[.statuses[] | select(.context == "merge")][0].state // ""')
+            [ "$old" = "$state" ] && continue
+            gh api -X POST "$R/statuses/$sha" -f state=$state -f context=merge -f description="$desc" \
+              -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+            posted=$((posted + 1))
+          done
+          echo "merge-check: $checked ship/* heads without a PR → $conflict conflict, $clean clean; $posted status(es) posted (post=$POST)"
