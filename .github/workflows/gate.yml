@@ -117,6 +117,15 @@ jobs:
           ref: ${{ env.SHA }}
           ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
           persist-credentials: false
+      # This log is public. A gate.sh without GATE_QUIET (anything older than
+      # ship/gate-under-5min) prints tsc/cargo errors, i.e. private paths and names, straight
+      # into it (job 117344346857 of run 39014686667). Gate nothing from such a commit.
+      - name: Quiet gate.sh required
+        id: quiet
+        run: |
+          grep -q 'GATE_QUIET' scripts/gate.sh && exit 0
+          echo "::error::scripts/gate.sh at this commit has no GATE_QUIET mode; merge dev-fe (with ship/gate-under-5min) into the branch and push"
+          exit 1
       - name: What changed
         id: changed
         env:
@@ -184,14 +193,7 @@ jobs:
         run: pnpm install --frozen-lockfile >/dev/null
       - name: TypeScript 7 (native tsc)
         if: steps.changed.outputs.fe == 'true'
-        # Only commits from ship/gate-under-5min on carry scripts/ts-native; older heads (dev-fe,
-        # main, most open PRs) have a gate.sh that runs `pnpm exec tsc` itself, so leave
-        # GATE_TSC_BIN unset there instead of failing npm ci on a missing lockfile.
         run: |
-          if [ ! -f scripts/ts-native/package-lock.json ]; then
-            echo "::notice::no scripts/ts-native at this commit: gate.sh uses the repo's own tsc"
-            exit 0
-          fi
           npm ci --prefix scripts/ts-native --no-audit --no-fund --ignore-scripts >/dev/null
           tsc=scripts/ts-native/node_modules/typescript/bin/tsc
           "$tsc" --version
@@ -242,8 +244,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ZUS_STATUS_PAT }}
           OUTCOME: ${{ job.status }}
+          QUIET: ${{ steps.quiet.outcome }}
         run: |
+          [ "$QUIET" = failure ] && OUTCOME=stale
           case "$OUTCOME" in
+            stale) state=error; desc="gate.sh predates quiet mode: merge dev-fe (after #43) and push" ;;
             success) state=success; desc="FE+Rust lanes green" ;;
             cancelled) state=error; desc="cancelled" ;;
             *) state=failure; desc="a lane is red: decrypt artifact gate-logs" ;;
