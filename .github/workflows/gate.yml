@@ -107,10 +107,9 @@ jobs:
         run: |
           gh api -X POST "repos/8-Sync-Dev/zus/statuses/$SHA" -f state=pending -f context=gate \
             -f description="running on zus-releases" -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
-      - name: Free runner disk
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
-          df -h / | tail -1
+      # No `rm -rf /usr/share/dotnet …` purge: it cost 1 min 45 s (run 38997630272); the Rust test
+      # build fits in the hosted image's free disk (the purge only existed for the VPS's 14 GB).
+      - run: df -h / | tail -1
       - name: Checkout zus (deploy key, read-only)
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
