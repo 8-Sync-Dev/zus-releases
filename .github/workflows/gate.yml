@@ -14,10 +14,14 @@ name: ZUS Gate
 #     ZUS_STATUS_PAT (commit statuses RW on zus only), so the PR in zus shows pass/fail and the
 #     link to this run. Nobody needs to look here except when it is red.
 #
-# Triggers: `repository_dispatch` type `zus-gate` from zus (.github/workflows/zus-gate.yml), and
-# `workflow_dispatch` for a run by hand. Never push/pull_request here: a fork or PR against this
-# repo must not reach the deploy key.
+# Triggers: a 5-min schedule that asks zus for open PRs into dev-fe and `ship/*` branches and
+# gates every head commit that has no `gate` status yet (the private repo cannot run even a
+# 5-second dispatcher job: its included minutes are spent, 2026-10-17), `repository_dispatch`
+# type `zus-gate` for an immediate run, and `workflow_dispatch` by hand. Never push/pull_request
+# here: a fork or PR against this repo must not reach the deploy key.
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   repository_dispatch:
     types: [zus-gate]
   workflow_dispatch:
@@ -38,23 +42,60 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  # One run per zus commit; a newer dispatch for the same branch cancels the older one.
-  group: zus-gate-${{ github.event.client_payload.ref || inputs.sha }}
-  cancel-in-progress: true
-
-env:
-  SHA: ${{ github.event.client_payload.sha || inputs.sha }}
-  BASE: ${{ github.event.client_payload.base || inputs.base }}
-  REF: ${{ github.event.client_payload.ref || '' }}
-  POST_STATUS: ${{ github.event_name == 'repository_dispatch' && 'true' || inputs.status }}
-
 jobs:
+  discover:
+    name: discover
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      targets: ${{ steps.find.outputs.targets }}
+    steps:
+      - name: Heads without a gate status
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.ZUS_STATUS_PAT }}
+        run: |
+          set -eu
+          R=repos/8-Sync-Dev/zus
+          # PR heads (base = the PR's base sha) and ship/* branch heads (base = merge base with dev-fe).
+          cands=$(gh api "$R/pulls?base=dev-fe&state=open&per_page=50" --jq '.[] | select(.head.repo.full_name == "8-Sync-Dev/zus") | "\(.head.sha) \(.base.sha) \(.head.ref)"')
+          for b in $(gh api "$R/branches?per_page=100" --paginate --jq '.[].name | select(startswith("ship/"))'); do
+            sha=$(gh api "$R/branches/$b" --jq .commit.sha)
+            echo "$cands" | grep -q "^$sha " && continue
+            mb=$(gh api "$R/compare/dev-fe...$sha" --jq .merge_base_commit.sha 2>/dev/null || echo "")
+            cands="$cands"$'\n'"$sha $mb $b"
+          done
+          targets='[]'
+          while read -r sha base ref; do
+            [ -n "$sha" ] || continue
+            # Already gated, or running: the status is set at the start of every run.
+            if gh api "$R/commits/$sha/status" --jq '.statuses[] | select(.context == "gate") | .state' | grep -q .; then continue; fi
+            targets=$(echo "$targets" | jq -c --arg sha "$sha" --arg base "$base" --arg ref "$ref" '. + [{sha:$sha, base:$base, ref:$ref}]')
+          done <<< "$cands"
+          echo "targets: $(echo "$targets" | jq length)"
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
   gate:
     name: gate
+    needs: [discover]
+    # `needs` of a skipped job: the dispatch events skip `discover`; `always()` keeps `gate` eligible.
+    if: always() && (github.event_name != 'schedule' || needs.discover.outputs.targets != '[]')
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ github.event_name == 'schedule' && fromJSON(needs.discover.outputs.targets) || fromJSON(format('[{{"sha":"{0}","base":"{1}","ref":"{2}"}}]', github.event.client_payload.sha || inputs.sha, github.event.client_payload.base || inputs.base, github.event.client_payload.ref || '')) }}
+    concurrency:
+      # One run per commit; a second schedule tick must not double up.
+      group: zus-gate-${{ matrix.target.sha }}
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
+      SHA: ${{ matrix.target.sha }}
+      BASE: ${{ matrix.target.base }}
+      REF: ${{ matrix.target.ref }}
+      POST_STATUS: ${{ github.event_name != 'workflow_dispatch' && 'true' || inputs.status }}
       CARGO_INCREMENTAL: "0"
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
