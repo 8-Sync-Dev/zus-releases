@@ -184,7 +184,14 @@ jobs:
         run: pnpm install --frozen-lockfile >/dev/null
       - name: TypeScript 7 (native tsc)
         if: steps.changed.outputs.fe == 'true'
+        # Only commits from ship/gate-under-5min on carry scripts/ts-native; older heads (dev-fe,
+        # main, most open PRs) have a gate.sh that runs `pnpm exec tsc` itself, so leave
+        # GATE_TSC_BIN unset there instead of failing npm ci on a missing lockfile.
         run: |
+          if [ ! -f scripts/ts-native/package-lock.json ]; then
+            echo "::notice::no scripts/ts-native at this commit: gate.sh uses the repo's own tsc"
+            exit 0
+          fi
           npm ci --prefix scripts/ts-native --no-audit --no-fund --ignore-scripts >/dev/null
           tsc=scripts/ts-native/node_modules/typescript/bin/tsc
           "$tsc" --version
