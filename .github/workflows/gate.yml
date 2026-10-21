@@ -1,11 +1,11 @@
 name: ZUS Gate
 
-# The scripts/gate.sh of the PRIVATE repo 8-Sync-Dev/zus (FE + Rust lanes), run on GitHub's
+# The scripts/gate.sh of the PRIVATE repo 8-Sync-Dev/zus (FE, Rust and bundle lanes), run on GitHub's
 # hosted runners from this PUBLIC repo, where Actions minutes are free. Free is the only reason it
 # lives here, so the job's PUBLIC surface is kept to what cannot identify code:
 #
 #   - The job log prints `gate:` lines only (stage names and seconds): gate.sh runs with
-#     GATE_QUIET=1, which sends every lane's own output (tsc, eslint, vitest, cargo) to a file.
+#     GATE_QUIET=1, which sends every lane's own output (tsc, eslint, vitest, cargo, vite) to a file.
 #   - That file is uploaded ENCRYPTED to the owner's age public key (vars.GATE_LOG_AGE_RECIPIENT);
 #     the private key is on the owner's machine, never on GitHub. Decrypt:
 #       gh run download <run_id> -R 8-Sync-Dev/zus-releases -n gate-logs && age -d -i <key> gate-logs.tar.age | tar x
@@ -221,6 +221,21 @@ jobs:
             export GATE_RUST_PACKAGES
           fi
           bash scripts/gate.sh rust
+      # The production bundle (Vite/rollup/esbuild). The FE lane only runs `tsc --noEmit`, which
+      # never emits, so a broken bundle surfaced first in release.yml's public log, with the code
+      # frame around the error. Only a gate.sh whose `build` lane runs through `retain_lane`
+      # (zus card #30) keeps that output in the encrypted lane log; an older one prints it straight
+      # here, so its commits are not bundle-gated.
+      - name: Bundle gate
+        if: steps.changed.outputs.fe == 'true'
+        env:
+          GATE_QUIET: "1"
+        run: |
+          if ! grep -Eq '^ *build\) +retain_lane build' scripts/gate.sh; then
+            echo "::notice::scripts/gate.sh at this commit has no quiet build lane: bundle not gated"
+            exit 0
+          fi
+          bash scripts/gate.sh build
       # The lane logs, encrypted to the owner. `always()`: a red lane is the one worth reading.
       - name: Encrypt lane logs
         # No lane ran when the quiet check refused the commit: nothing to keep (and `age` is not installed yet).
