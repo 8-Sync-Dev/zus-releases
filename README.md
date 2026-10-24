@@ -27,33 +27,28 @@
 
 ### Release metrics
 
-<sub>Updated September 18, 2026. Source: GitHub Releases API (<code>download_count</code>) and Traffic API.</sub>
-
 </div>
 
 | Metric / Chỉ số | Value / Giá trị | Notes / Ghi chú |
 |---|---|---|
-| Signed releases / Bản phát hành | 5 | v1.1.0 to v1.4.0 (Jul 15 - Sep 17, 2026) |
-| Installer downloads / Lượt tải bộ cài | 322 | Windows: 291, Linux: 22, macOS: 9 (excludes `.sig` files) |
-| Update feed checks / Kiểm tra cập nhật | 416 | `latest.json` feed requests |
-| Signed artifacts per release / Chữ ký số mỗi bản | 9 | Minisign `.sig` bundled with every binary |
+| Signed releases / Bản phát hành | 12 | v1.1.0 to v1.7.5 (Jul 15 - Oct 24, 2026) |
+| Installer downloads / Lượt tải bộ cài | 395 | Windows: 350, Linux: 38, macOS: 7 (excludes `.sig` files; includes our own test downloads) |
+| Signed artifacts per release / Chữ ký số mỗi bản | 15 | Assets of v1.7.5: installers, Minisign `.sig` files, `latest.json` feed, `SHA256SUMS.txt` |
 | Supported platforms / Hệ điều hành | 3 | Windows x64, macOS Apple Silicon, Linux (deb, rpm, AppImage) |
-| Windows installer size / Bộ cài Windows | 22.3 MB | Tauri 2 and Rust, without embedded Chromium |
+| Windows installer size / Bộ cài Windows | 19 MB | Tauri 2 and Rust, without embedded Chromium |
 
-<div align="center">
+<sub>Updated October 24, 2026. Source: GitHub Releases API (<code>download_count</code>).</sub>
 
-<img src="assets/stats/downloads-by-platform.png" width="880" alt="Installer downloads by platform: Windows 291, Linux 22, macOS 9">
+<sub><b>Latest release / Bản mới nhất: v1.7.5 (October 24, 2026).</b> Sketch First: review an AI change part by part, and your edits survive an AI turn. Verified Agent Workspace: a check never reads Verified on files it cannot name. Full changelog in <a href="https://github.com/8syncdev/zus-releases/releases/latest">release notes</a>.</sub>
 
-<img src="assets/stats/updates-by-release.png" width="880" alt="Update check activity per release: latest.json feed polls per version">
-
-<sub><b>Latest release / Bản mới nhất: v1.4.0 (September 17, 2026).</b> Execution provenance tracking, composer slash-command menu, conversation renaming, and per-turn receipts. Full changelog in <a href="https://github.com/8syncdev/zus-releases/releases/latest">release notes</a>.</sub>
+<sub>Support ZUS / Ủng hộ ZUS: <a href="https://github.com/sponsors/8-Sync-Dev">GitHub Sponsors</a> · <a href="https://zus.8syncdev.com">zus.8syncdev.com</a></sub>
 
 </div>
 ---
 
 ## English
 
-ZUS is an AI-native desktop IDE built with Tauri 2 and Rust. It combines the VS Code workbench with a local-first autonomous agent in a 22.3 MB installer.
+ZUS is an AI-native desktop IDE built with Tauri 2 and Rust. It combines the VS Code workbench with a local-first autonomous agent in a 19 MB installer.
 
 Most AI development environments package a Chromium browser, send code to remote indexing servers, and display code changes inside chat threads. ZUS uses a different architecture:
 
@@ -64,7 +59,7 @@ Most AI development environments package a Chromium browser, send code to remote
 ### Core capabilities
 
 #### Architecture and performance
-- **22.3 MB installer:** Tauri 2 uses the operating system's native WebView and a Rust backend. The Windows installer is 22.3 MB, compared to approximately 184 MB for Cursor and 199 MB for VS Code.
+- **19 MB installer:** Tauri 2 uses the operating system's native WebView and a Rust backend. The Windows installer is 19 MB, compared to approximately 184 MB for Cursor and 199 MB for VS Code.
 - **Low resource consumption:** The application starts in under 400 ms on modern hardware. Idle memory consumption stays under 120 MB, keeping system resources available for build tools and test suites.
 
 #### Execution engines
@@ -180,7 +175,7 @@ Join the official ZUS Discord community to ask questions, share workflows, or re
 
 ## Tiếng Việt
 
-ZUS là môi trường phát triển tích hợp (IDE) chuyên dụng cho AI, xây dựng trên nền tảng Tauri 2 và Rust. Ứng dụng kết hợp đầy đủ không gian làm việc của VS Code với agent tự động cục bộ, đóng gói trong bộ cài 22.3 MB.
+ZUS là môi trường phát triển tích hợp (IDE) chuyên dụng cho AI, xây dựng trên nền tảng Tauri 2 và Rust. Ứng dụng kết hợp đầy đủ không gian làm việc của VS Code với agent tự động cục bộ, đóng gói trong bộ cài 19 MB.
 
 Phần lớn các IDE AI hiện nay phân phối kèm một bản Chromium hoàn chỉnh, tải mã nguồn lên máy chủ để lập chỉ mục và hiển thị kết quả qua các đoạn chat dài. ZUS chọn hướng kiến trúc khác:
 
@@ -191,7 +186,7 @@ Phần lớn các IDE AI hiện nay phân phối kèm một bản Chromium hoàn
 ### Tính năng cốt lõi
 
 #### Kiến trúc và hiệu năng
-- **Bộ cài 22.3 MB:** Kiến trúc Tauri 2 sử dụng WebView hệ điều hành và lõi Rust. Bộ cài Windows có dung lượng 22.3 MB, so với khoảng 184 MB của Cursor và 199 MB của VS Code.
+- **Bộ cài 19 MB:** Kiến trúc Tauri 2 sử dụng WebView hệ điều hành và lõi Rust. Bộ cài Windows có dung lượng 19 MB, so với khoảng 184 MB của Cursor và 199 MB của VS Code.
 - **Khởi động nhanh và tiết kiệm tài nguyên:** Thời gian mở ứng dụng dưới 400 ms trên phần cứng phổ thông. Bộ nhớ RAM ở trạng thái chờ dưới 120 MB, nhường tài nguyên cho trình biên dịch và công cụ kiểm thử cục bộ.
 
 #### Cơ chế thực thi của agent
