@@ -7,7 +7,8 @@ name: Sandbox OS tests
 # `cargo test -p zus-extensions` on macOS and Windows, by hand, with gate.yml's public surface:
 #
 #   - Checkout with the read-only deploy key, credentials not persisted.
-#   - The job log prints stage names, pass or fail and test counts only: pnpm and cargo write to
+#   - The job log prints stage names, pass or fail and test counts (in all and per
+#     `tests/*_confined.rs` suite) only: pnpm and cargo write to
 #     .tmp/sandbox-os/*.log, uploaded ENCRYPTED to the owner's age public key
 #     (vars.GATE_LOG_AGE_RECIPIENT), one artifact per OS. Decrypt:
 #       gh run download <run_id> -R 8-Sync-Dev/zus-releases -n sandbox-os-logs-<os> && age -d -i <key> sandbox-os-logs.tar.age | tar x
@@ -118,12 +119,12 @@ jobs:
       - name: cargo test -p zus-extensions
         run: |
           mkdir -p "$LOGS"
-          # --no-fail-fast: a red unit test must not hide whether the confined tsserver tests ran.
+          # --no-fail-fast: a red unit test must not hide whether the confined suites ran.
           if cargo test -p zus-extensions --locked --no-fail-fast >"$LOGS/cargo-test.log" 2>&1; then r=pass; else r=fail; fi
-          # Counts only: test and file names stay in the encrypted log.
-          awk '/Running tests.tsserver_confined/ { c = 1 }
-            /^test result:/ { p += $4; f += $6; s += $8; if (c) { cp = $4; cf = $6; c = 0 } }
-            END { printf "tests: %d passed, %d failed, %d ignored (tsserver_confined: %d passed, %d failed)\n", p, f, s, cp, cf }' "$LOGS/cargo-test.log"
+          # Counts, and each confined suite's by name: test names stay in the encrypted log.
+          awk '/Running tests.[a-z_]*_confined\.rs/ { match($0, /[a-z_]*_confined/); c = substr($0, RSTART, RLENGTH) }
+            /^test result:/ { p += $4; f += $6; s += $8; if (c != "") { by = by sprintf(", %s %d passed %d failed", c, $4, $6); c = "" } }
+            END { printf "tests: %d passed, %d failed, %d ignored%s\n", p, f, s, by }' "$LOGS/cargo-test.log"
           echo "cargo test: $r"
           [ "$r" = pass ]
       # The logs, encrypted to the owner. `always()`: a red run is the one worth reading.
