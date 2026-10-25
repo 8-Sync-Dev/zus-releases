@@ -1,0 +1,148 @@
+name: Sandbox OS tests
+
+# The language-server sandbox of the PRIVATE repo 8-Sync-Dev/zus (ADR-0052 decision 3: tsserver
+# under Node's permission model, crate zus-extensions) behaves per OS: Node compares the allowed
+# paths as written, so a Windows drive letter's case matters, and stages 3 and 4 are OS-specific.
+# gate.yml runs on ubuntu-24.04 only and release.yml runs no tests, so this runs
+# `cargo test -p zus-extensions` on macOS and Windows, by hand, with gate.yml's public surface:
+#
+#   - Checkout with the read-only deploy key, credentials not persisted.
+#   - The job log prints stage names, pass or fail and test counts (in all and per
+#     `tests/*_confined.rs` suite) only: pnpm and cargo write to
+#     .tmp/sandbox-os/*.log, uploaded ENCRYPTED to the owner's age public key
+#     (vars.GATE_LOG_AGE_RECIPIENT), one artifact per OS. Decrypt:
+#       gh run download <run_id> -R 8-Sync-Dev/zus-releases -n sandbox-os-logs-<os> && age -d -i <key> sandbox-os-logs.tar.age | tar x
+#   - No caches: runs are occasional, and a pnpm store and Rust target per OS would push
+#     gate.yml's caches out of the repository's 10 GB.
+#
+# Trigger: workflow_dispatch only. Never push/pull_request here: a fork or PR against this repo
+# must not reach the deploy key.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit of 8-Sync-Dev/zus to test (full sha, with crates/zus-extensions/tests/tsserver_confined.rs)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sandbox:
+    name: sandbox (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # age v1.3.2 release assets, sha256 as GitHub lists them for the release.
+        include:
+          - os: macos-latest
+            age: age-v1.3.2-darwin-arm64.tar.gz
+            age-sha256: e2020b073c44f692685a24d6abc378817eb81ffaaf49fd0531ef8565f767f2f5
+          - os: windows-latest
+            age: age-v1.3.2-windows-amd64.zip
+            age-sha256: f48d8f8f9ebe903ab5027ed067652f2cc1db94bc206976430133b905dcd8e8c7
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        # Windows would run these in PowerShell.
+        shell: bash
+    env:
+      SHA: ${{ inputs.sha }}
+      # tests/tsserver_confined.rs fails instead of skipping when Node or TypeScript is missing.
+      CI: "true"
+      LOGS: .tmp/sandbox-os
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+    steps:
+      - name: Checkout zus (deploy key, read-only)
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: 8-Sync-Dev/zus
+          ref: ${{ env.SHA }}
+          ssh-key: ${{ secrets.ZUS_SRC_DEPLOY_KEY }}
+          persist-credentials: false
+      # Without the confined tsserver tests the crate's unit tests alone would pass and read as
+      # proof for this OS.
+      - name: Sandbox tests required
+        run: |
+          [ -f crates/zus-extensions/tests/tsserver_confined.rs ] && exit 0
+          echo "::error::this commit has no crates/zus-extensions/tests/tsserver_confined.rs: dispatch with one that has it"
+          exit 1
+      - name: pnpm version from packageManager
+        id: pm
+        run: |
+          set -euo pipefail
+          v=$(node -p "require('./package.json').packageManager?.split('@')[1] ?? ''")
+          [ -n "$v" ] || { echo "::error::package.json lacks packageManager"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: ${{ steps.pm.outputs.version }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      # Before anything writes a log: no run here leaves output it cannot encrypt.
+      - name: age (release asset, digest checked)
+        id: age
+        env:
+          ASSET: ${{ matrix.age }}
+          DIGEST: ${{ matrix.age-sha256 }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/age-dist
+          curl -fsSL -o ".tmp/$ASSET" "https://github.com/FiloSottile/age/releases/download/v1.3.2/$ASSET"
+          got=$(node -e "process.stdout.write(require('crypto').createHash('sha256').update(require('fs').readFileSync(process.argv[1])).digest('hex'))" ".tmp/$ASSET")
+          [ "$got" = "$DIGEST" ] || { echo "::error::$ASSET does not match its pinned sha256"; exit 1; }
+          case "$ASSET" in
+            *.zip) unzip -q ".tmp/$ASSET" -d .tmp/age-dist ;;
+            *) tar -xzf ".tmp/$ASSET" -C .tmp/age-dist ;;
+          esac
+          bin=.tmp/age-dist/age/age
+          [ -f "$bin.exe" ] && bin="$bin.exe"
+          "$bin" --version
+          echo "AGE=$bin" >> "$GITHUB_ENV"
+      - name: Rust toolchain (repo pin)
+        run: |
+          set -euo pipefail
+          v=$(sed -n 's/^rust-version *= *"\([^"]*\)".*/\1/p' Cargo.toml | head -n 1)
+          [ -n "$v" ] || { echo "::error::Cargo.toml lacks rust-version"; exit 1; }
+          rustup toolchain install "$v" --profile minimal
+          rustup default "$v"
+          rustc -V
+      - name: Install JS dependencies
+        run: |
+          mkdir -p "$LOGS"
+          if pnpm install --frozen-lockfile >"$LOGS/pnpm-install.log" 2>&1; then echo "pnpm install: pass"; else echo "pnpm install: fail"; exit 1; fi
+      - name: cargo test -p zus-extensions
+        run: |
+          mkdir -p "$LOGS"
+          # --no-fail-fast: a red unit test must not hide whether the confined suites ran.
+          if cargo test -p zus-extensions --locked --no-fail-fast >"$LOGS/cargo-test.log" 2>&1; then r=pass; else r=fail; fi
+          # Counts, and each confined suite's by name: test names stay in the encrypted log.
+          awk '/Running tests.[a-z_]*_confined\.rs/ { match($0, /[a-z_]*_confined/); c = substr($0, RSTART, RLENGTH) }
+            /^test result:/ { p += $4; f += $6; s += $8; if (c != "") { by = by sprintf(", %s %d passed %d failed", c, $4, $6); c = "" } }
+            END { printf "tests: %d passed, %d failed, %d ignored%s\n", p, f, s, by }' "$LOGS/cargo-test.log"
+          echo "cargo test: $r"
+          [ "$r" = pass ]
+      # The logs, encrypted to the owner. `always()`: a red run is the one worth reading.
+      - name: Encrypt logs
+        if: always() && steps.age.outcome == 'success'
+        env:
+          RECIPIENT: ${{ vars.GATE_LOG_AGE_RECIPIENT }}
+        run: |
+          [ -n "$RECIPIENT" ] || { echo "::warning::vars.GATE_LOG_AGE_RECIPIENT unset: logs not kept"; exit 0; }
+          shopt -s nullglob
+          logs=("$LOGS"/*.log)
+          [ ${#logs[@]} -gt 0 ] || { echo "no logs to keep"; exit 0; }
+          tar -cf - "${logs[@]}" | "$AGE" -r "$RECIPIENT" -o .tmp/sandbox-os-logs.tar.age
+          ls -l .tmp/sandbox-os-logs.tar.age
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: sandbox-os-logs-${{ matrix.os }}
+          path: .tmp/sandbox-os-logs.tar.age
+          retention-days: 14
+          if-no-files-found: ignore
