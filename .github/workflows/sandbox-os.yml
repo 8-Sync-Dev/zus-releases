@@ -118,7 +118,8 @@ jobs:
       - name: cargo test -p zus-extensions
         run: |
           mkdir -p "$LOGS"
-          if cargo test -p zus-extensions --locked >"$LOGS/cargo-test.log" 2>&1; then r=pass; else r=fail; fi
+          # --no-fail-fast: a red unit test must not hide whether the confined tsserver tests ran.
+          if cargo test -p zus-extensions --locked --no-fail-fast >"$LOGS/cargo-test.log" 2>&1; then r=pass; else r=fail; fi
           # Counts only: test and file names stay in the encrypted log.
           awk '/Running tests.tsserver_confined/ { c = 1 }
             /^test result:/ { p += $4; f += $6; s += $8; if (c) { cp = $4; cf = $6; c = 0 } }
