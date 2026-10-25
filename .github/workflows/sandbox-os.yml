@@ -84,6 +84,13 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
+      # gopls's `go` runs confined in `os_sandbox_confined` (Linux and macOS only), which fails on CI
+      # without Go; the macOS image has none on PATH. No cache, as above.
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: runner.os == 'macOS'
+        with:
+          go-version: stable
+          cache: false
       # Before anything writes a log: no run here leaves output it cannot encrypt.
       - name: age (release asset, digest checked)
         id: age
