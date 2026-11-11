@@ -158,9 +158,22 @@ jobs:
           echo "admin=$admin" >> "$GITHUB_OUTPUT"
           echo "scoped=$scoped" >> "$GITHUB_OUTPUT"
       - name: Linux system deps (Tauri)
+        # The runner's apt mirror (`mirror+file:/etc/apt/apt-mirrors.txt`) can go dark. Then
+        # `apt-get update` only warns and `install` hangs until the job's 60-minute cap: every
+        # gate on 2026-11-11 from 13:15 UTC died there. Bound each fetch, and fall back to the
+        # Ubuntu archive when the mirror cannot serve the index.
+        timeout-minutes: 15
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libssl-dev libxdo-dev libdbus-1-dev pkg-config age >/dev/null
+          set -euo pipefail
+          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+          if ! sudo apt-get update -qq "${apt_opts[@]}" 2>&1 | tee /tmp/apt-update.log \
+              || grep -Eq '^(W: Failed to fetch|E: )' /tmp/apt-update.log; then
+            echo "::warning::runner apt mirror unreachable; using archive.ubuntu.com"
+            sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#g' \
+              /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
+            sudo apt-get update -qq "${apt_opts[@]}"
+          fi
+          sudo apt-get install -y -qq "${apt_opts[@]}" libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libssl-dev libxdo-dev libdbus-1-dev pkg-config age >/dev/null
       - name: pnpm version from packageManager
         id: pm
         run: |
