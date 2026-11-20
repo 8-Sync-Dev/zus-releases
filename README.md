@@ -85,7 +85,7 @@ scoop bucket add zus https://github.com/8-Sync-Dev/scoop-zus
 scoop install zus
 ```
 
-Scoop installs 1.8.0 (verified against `SHA256SUMS.txt` of the v1.8.0 release).
+Scoop installs 1.8.1 (verified against `SHA256SUMS.txt` of the v1.8.1 release).
 
 As of November 19, 2026, winget is not available. The package `8syncdev.ZUS` was removed from the winget catalog, and its return with 1.8.0 is [in review](https://github.com/microsoft/winget-pkgs/pull/483890).
 
@@ -246,7 +246,7 @@ scoop bucket add zus https://github.com/8-Sync-Dev/scoop-zus
 scoop install zus
 ```
 
-Scoop cài bản 1.8.0 (đã đối chiếu với `SHA256SUMS.txt` của release v1.8.0).
+Scoop cài bản 1.8.1 (đã đối chiếu với `SHA256SUMS.txt` của release v1.8.1).
 
 Tính đến 19/11/2026, winget chưa dùng được. Gói `8syncdev.ZUS` đã bị gỡ khỏi danh mục winget, và yêu cầu đưa 1.8.0 trở lại [đang chờ duyệt](https://github.com/microsoft/winget-pkgs/pull/483890).
 
